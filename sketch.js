@@ -1,15 +1,7 @@
 kaboom({
-  scale: 2,
+  scale: 2.5,
   background: [30,30,30],
 })
-
-//load player
-const player = add([
-  rect(32,64), 
-  pos(64,0), 
-  body(), 
-  area() 
-])
 
 //sprites
 loadSprite("fred","fred.png", {
@@ -21,28 +13,67 @@ loadSprite("fred","fred.png", {
             loop:true},
     }
 })
+loadSprite("wiz","Wizrd.png", {
+  sliceX: 3,
+  sliceY: 4,
+  anims: {
+    idle: {
+      from: 0,
+      to:0},
+    run: {
+      from: 3,
+      to:6,
+      speed: 12,
+      loop: true},
+    fall: {
+      from: 1,
+      to: 2,
+      loop: true,
+      speed: 12,
+    },
+    dash: {
+      from: 7,
+      to: 10,
+      speed: 12,
+      loop: true},
+  }
+})
+
+//load player
+const player = add([
+  sprite("wiz", {
+    anim: "idle",
+  }), 
+  pos(64,0), 
+  area({width: 12,
+       height: 29}),
+  body(),  
+  origin("center")
+])
+
+const aim = player.pos.sub(mousePos()).unit()
 
 //test platform
 const levelConfig = {
-  width: 32,
-  height: 32,
-  pos: vec2(32,32),
+  width: 24,
+  height: 24,
+  pos: vec2(24,24),
     "w": () => [
     "wall",
-    rect(32,32),
+    rect(24,24),
     area(),
     solid()
   ],
     "m": () => [
     "wall",
-    rect(32,32),
+    rect(24,24),
     color(200,200,200),
     area(),
     solid()
   ],
     "z": () => [
     "fallbox",
-    rect(32,32),
+    rect(24,24),
     color(255,0,0),
     area(),
     opacity(0.1),
@@ -55,18 +86,17 @@ const levelConfig = {
     }),
     area(),
     solid(),
-    body()
+    body(),
   ],
       "b": () => [
     "border",
-    rect(32,32),
+    rect(24,24),
     color(0,200,200),
     area(),
     opacity(0.1),
     
   ],
 }
-
 const levels = [
 [
   "m               m          z",
@@ -78,31 +108,73 @@ const levels = [
   "zzzzzzzzzzzzzzzzzzzzzzzzzzzz",
   ],
 ]
-
 addLevel(levels[0],levelConfig)
 
- // player movement
-  player.onUpdate(() => {
-  camPos(player.pos.x,player.pos.y)})
-  onKeyPress("x",() =>{
-   if (player.isGrounded() == true)
-    player.jump(500)
-  })
-  onKeyDown("right",() => {
-    player.move(300,0)
-  })
-  onKeyDown("left",() => {
-    player.move(-300,0)
-  })
+//health and jazz
+let PHP = 3
+const TempHP = add([
+  text("Hp = 3", {
+    size: 20,
+    font: "sink"
+  }),
+  pos(10,10),
+  fixed()
+])
  player.onCollide("fallbox",() => {
    player.pos.x = 64
    player.pos.y = 0
+   PHP--
+   TempHP.text = "Hp = "+ PHP
  })
+
+// player movement
+  player.onUpdate(() => {
+  camPos(player.pos.x,player.pos.y)})
+  onKeyPress("space",() =>{
+   if (player.isGrounded() == true)
+    player.jump(500)
+    player.play("fall")
+  })
+  onKeyDown("d",() => {
+    player.move(300,0)
+  })
+  onKeyDown("a",() => {
+    player.move(-300,0)
+  })
+//player anims
+  onKeyPress("d",() =>{
+      player.flipX(false)
+   if (player.isGrounded() == true){
+    player.play ("run")
+   }
+    else{
+      player.play("fall")
+    }
+  })
+  onKeyPress("a",() =>{
+      player.flipX(true)
+   if (player.isGrounded() == true){
+    player.play ("run")
+   }
+   else{
+     player.play("fall")
+   }   
+  })
+  onKeyRelease(["a", "d"], () => {
+	 if (
+	 	!isKeyDown("a")
+		&& !isKeyDown("d")
+	 ) 
+	 if(player.isGrounded == false){
+      player.play("fall")
+        }
+   else{player.play("idle")}
+})
+
 
 //test enemy movement
 let fMov = 30
-
-  onUpdate("fred",(f) => {
+ onUpdate("fred",(f) => {
     f.move(fMov,0)
   })
  onCollide("fred","border",(f,b) => {
