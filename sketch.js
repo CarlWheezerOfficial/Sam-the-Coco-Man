@@ -39,20 +39,6 @@ loadSprite("wiz","Wizrd.png", {
   }
 })
 
-//load player
-const player = add([
-  sprite("wiz", {
-    anim: "idle",
-  }), 
-  pos(64,0), 
-  area({width: 12,
-       height: 29}),
-  body(),  
-  origin("center")
-])
-
-const aim = player.pos.sub(mousePos()).unit()
-
 //test platform
 const levelConfig = {
   width: 24,
@@ -93,7 +79,16 @@ const levelConfig = {
     rect(24,24),
     color(0,200,200),
     area(),
-    opacity(0.1),
+    opacity(0),
+    
+  ],
+        "0": () => [
+    "orb",
+    rect(10,10),
+    color(0,100,200),
+    area(),
+    opacity(0.5),
+    origin("center")
     
   ],
 }
@@ -102,7 +97,7 @@ const levels = [
   "m               m          z",
   "w               w          z",
   "m  bf  b       wm          z",
-  "w   wmw        mw          z",
+  "w   wmw  0     mw          z",
   "mwmwmwmwmwm  wmwm          z",
   "wmwmwmwmwmw  mwmwmw      mwz",
   "zzzzzzzzzzzzzzzzzzzzzzzzzzzz",
@@ -110,11 +105,106 @@ const levels = [
 ]
 addLevel(levels[0],levelConfig)
 
+
+//player
+//load player
+const player = add([
+  sprite("wiz", {
+    anim: "idle",
+  }), 
+  pos(64,0), 
+  area({width: 12,
+       height: 29}),
+  body(),  
+  origin("center")
+])
+
+//magic
+let mana = 100
+const TempMP = add([
+  text("Mana = 100", {
+    size: 10,
+    font: "sink"
+  }),
+  pos(10,30),
+  fixed()
+])
+onKeyPress("right",() => {
+  if((mana-5) >= 0){
+  add([
+    "bullet",
+    rect(5,5),
+    move(0,200),
+    area(),
+    pos(player.pos.x,player.pos.y),
+    mana -= 5,
+    TempMP.text = "Mana = "+ mana
+  ])
+  }
+})
+onKeyPress("left",() => {
+  if((mana -5) >= 0){
+  add([
+    "bullet",
+    area(),
+    rect(5,5),
+    move(180,200),
+    pos(player.pos.x,player.pos.y),
+    mana -= 5,
+    TempMP.text = "Mana = "+ mana
+  ])
+  }
+})
+onKeyPress("down",() => {
+  if((mana-5) >= 0){
+  add([
+    "bullet",
+    area(),
+    rect(5,5),
+    move(90,200),
+    pos(player.pos.x,player.pos.y),
+    mana -= 5,
+    TempMP.text = "Mana = "+ mana
+  ])
+  }
+})
+onKeyPress("up",() => {
+  if((mana -5 )>= 0){
+  add([
+    "bullet",
+    area(),
+    rect(5,5),
+    move(270,200),
+    pos(player.pos.x,player.pos.y),
+    mana -= 5,
+    TempMP.text = "Mana = "+ mana
+  ])
+  }
+})
+loop(1, ()=>{
+if(mana < 100){
+        mana += 1
+    TempMP.text = "Mana = "+ mana
+}
+  else{
+    mana = 100
+    TempMP.text = "Mana = "+ mana
+  }
+  })
+player.onCollide("orb",(o) => {
+  destroy(o)
+  mana += randi(10,50)
+  if(mana > 100){
+    mana = 100
+  }
+  TempMP.text = "Mana = "+ mana
+})
+
 //health and jazz
 let PHP = 3
 const TempHP = add([
   text("Hp = 3", {
-    size: 20,
+    size: 10,
     font: "sink"
   }),
   pos(10,10),
@@ -172,6 +262,7 @@ const TempHP = add([
 })
 
 
+//enemies
 //test enemy movement
 let fMov = 30
  onUpdate("fred",(f) => {
@@ -186,3 +277,17 @@ let fMov = 30
       f.flipX(true)
     }
  })
+
+//enemy collision and drops
+onCollide("fred","bullet",(f,o) => {
+  destroy(f)
+  destroy(o)
+  add([
+        "orb",
+    rect(10,10),
+    color(0,100,200),
+    area(),
+    pos(f.pos),
+    opacity(0.5),
+  ])
+})
